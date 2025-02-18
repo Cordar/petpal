@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "270381856958",
+    "project_id": "petpal-8c1c4",
+    "storage_bucket": "petpal-8c1c4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:270381856958:android:a079db12823ec80ad3c6ef",
+        "android_client_info": {
+          "package_name": "com.example.mybestfriend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCAqUpnlSvPAKJRqtf5BfhyPmam6CKi_I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
