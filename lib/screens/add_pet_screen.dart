@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/pet_provider.dart';
@@ -16,11 +14,12 @@ class AddPetScreen extends StatefulWidget {
 
 class _AddPetScreenState extends State<AddPetScreen> {
   final _nameController = TextEditingController();
-  final _typeController = TextEditingController();
-  final _ageController = TextEditingController();
+  final _birthdayController = TextEditingController();
   File? _selectedImage;
-  Uint8List? _compressedImage;
   bool _isUploading = false;
+  DateTime? _selectedBirthday;
+  final List<TimeOfDay> _feedingTimes = [];
+  final List<TimeOfDay> _walkingTimes = [];
 
   Future<void> _pickImage() async {
     final pickedImage = await ImagePicker().pickImage(
@@ -28,34 +27,64 @@ class _AddPetScreenState extends State<AddPetScreen> {
       imageQuality: 50,
     );
     if (pickedImage != null) {
-      // Further compress the image
-      final compressed = await _compressImage(File(pickedImage.path));
       setState(() {
         _selectedImage = File(pickedImage.path);
-        _compressedImage = compressed;
       });
     }
   }
 
-  Future<Uint8List> _compressImage(File file) async {
-    var result = await FlutterImageCompress.compressWithFile(
-      file.absolute.path,
-      quality: 50,
+  Future<void> _pickBirthday() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
     );
-    if (result == null) {
-      return Uint8List(0); // Return empty Uint8List if compression fails
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedBirthday = pickedDate;
+        _birthdayController.text = "${pickedDate.toLocal()}".split(' ')[0];
+      });
     }
-    return result;
+  }
+
+  Future<void> _pickTime(List<TimeOfDay> timeList) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        timeList.add(pickedTime);
+      });
+    }
+  }
+
+  Future<String?> _uploadImageToFirebase(File image) async {
+    try {
+      final fileName = DateTime.now().toString();
+      final ref =
+          FirebaseStorage.instance.ref().child('pet_images/$fileName.jpg');
+
+      await ref.putFile(image);
+      final imageUrl = await ref.getDownloadURL();
+      return imageUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
   }
 
   Future<void> _savePet() async {
     final name = _nameController.text;
-    final type = _typeController.text;
-    final age = int.tryParse(_ageController.text) ?? 0;
 
-    if (name.isEmpty || type.isEmpty || age <= 0 || _compressedImage == null) {
+    if (name.isEmpty ||
+        _selectedBirthday == null ||
+        _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Por favor, rellena todos los campos.')),
+        const SnackBar(content: Text('Por favor, rellena todos los campos.')),
       );
       return;
     }
@@ -64,58 +93,96 @@ class _AddPetScreenState extends State<AddPetScreen> {
       _isUploading = true;
     });
 
-    // Encode image as base64
-    final imageBase64 = base64Encode(_compressedImage!);
+    final imageUrl = await _uploadImageToFirebase(_selectedImage!);
 
-    Provider.of<PetProvider>(context, listen: false)
-        .addPet(name, type, age, imageBase64);
+    setState(() {
+      _isUploading = false;
+    });
 
-    Navigator.of(context).pop();
+    if (imageUrl != null) {
+      Provider.of<PetProvider>(context, listen: false).addPet(
+        name,
+        _selectedBirthday!,
+        imageUrl,
+        _feedingTimes,
+        _walkingTimes,
+      );
+      Navigator.of(context).pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al subir la imagen.')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agregar Mascota'),
+        title: const Text('Agregar Mascota'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Nombre'),
-            ),
-            TextField(
-              controller: _typeController,
-              decoration: InputDecoration(labelText: 'Raza'),
-            ),
-            TextField(
-              controller: _ageController,
-              decoration: InputDecoration(labelText: 'Edad'),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 20),
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage:
-                    _selectedImage != null ? FileImage(_selectedImage!) : null,
-                child: _selectedImage == null
-                    ? Icon(Icons.add_a_photo, size: 50)
-                    : null,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
               ),
-            ),
-            SizedBox(height: 20),
-            _isUploading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _savePet,
-                    child: Text('Guardar'),
-                  ),
-          ],
+              TextField(
+                controller: _birthdayController,
+                readOnly: true,
+                onTap: _pickBirthday,
+                decoration: const InputDecoration(labelText: 'Cumpleaños'),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _selectedImage != null
+                      ? FileImage(_selectedImage!)
+                      : null,
+                  child: _selectedImage == null
+                      ? const Icon(Icons.add_a_photo, size: 50)
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Feeding Times:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              ..._feedingTimes.map(
+                (time) => Text(time.format(context)),
+              ),
+              TextButton(
+                onPressed: () => _pickTime(_feedingTimes),
+                child: const Text('Add Feeding Time'),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Walking Times:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              ..._walkingTimes.map(
+                (time) => Text(time.format(context)),
+              ),
+              TextButton(
+                onPressed: () => _pickTime(_walkingTimes),
+                child: const Text('Add Walking Time'),
+              ),
+              const SizedBox(height: 20),
+              _isUploading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _savePet,
+                      child: const Text('Guardar'),
+                    ),
+            ],
+          ),
         ),
       ),
     );

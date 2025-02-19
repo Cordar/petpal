@@ -19,14 +19,19 @@ class PetProvider extends ChangeNotifier {
     });
   }
 
-  addPet(String name, String type, int age, String? imageBase64) async {
+  addPet(String name, DateTime birthday, String imageUrl,
+      List<TimeOfDay> feedingTimes, List<TimeOfDay> walkingTimes) async {
     var pet = Pet(
       name: name,
-      type: type,
-      age: age,
-      imageBase64: imageBase64 ?? "",
-      experience: 0,
-      happiness: 50,
+      birthday: birthday,
+      imageUrl: imageUrl,
+      experience: 0.0,
+      happiness: 100.0,
+      hunger: 0.0,
+      lastWalked: DateTime.now(),
+      lastFed: DateTime.now(),
+      feedingTimes: feedingTimes, // Default feeding times
+      walkingTimes: walkingTimes, // Default walking times
     );
 
     await db.collection('pets').add(pet.toFirestore());
@@ -34,10 +39,32 @@ class PetProvider extends ChangeNotifier {
   }
 
   void startWalk(Pet pet) {
-    // Update pet state and notify listeners
+    pet.lastWalked = DateTime.now();
+    pet.happiness = (pet.happiness + 10).clamp(0, 100);
+    pet.experience += 10;
+
+    db.collection('pets').doc(pet.id).update({
+      'lastWalked': pet.lastWalked,
+      'happiness': pet.happiness,
+      'experience': pet.experience,
+    });
+
+    notifyListeners();
   }
 
   void giveFood(Pet pet) {
-    // Update pet state and notify listeners
+    pet.lastFed = DateTime.now();
+    pet.hunger = (pet.hunger + 20).clamp(0, 100);
+    pet.happiness = (pet.happiness + 5).clamp(0, 100);
+    pet.experience += 1;
+
+    db.collection('pets').doc(pet.id).update({
+      'lastFed': pet.lastFed,
+      'hunger': pet.hunger,
+      'happiness': pet.happiness,
+      'experience': pet.experience,
+    });
+
+    notifyListeners();
   }
 }

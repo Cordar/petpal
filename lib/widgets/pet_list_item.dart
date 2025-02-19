@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:mybestfriend/models/pet.dart';
 import 'package:mybestfriend/providers/pet_provider.dart';
@@ -21,12 +18,13 @@ class PetListItem extends StatelessWidget {
       elevation: 3,
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundImage: pet.imageBase64.isNotEmpty
-              ? MemoryImage(base64Decode(pet.imageBase64))
-              : null,
-          child: pet.imageBase64.isEmpty ? Text(pet.name[0]) : null,
-        ),
+        leading: pet.imageUrl.isNotEmpty
+            ? CircleAvatar(
+                backgroundImage: NetworkImage(pet.imageUrl),
+              )
+            : CircleAvatar(
+                child: Text(pet.name[0]),
+              ),
         title: Text(
           pet.name,
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -34,7 +32,7 @@ class PetListItem extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Felicidad: ${pet.happiness.toStringAsFixed(1)}'),
+            LinearProgressIndicator(value: pet.happinessPercentatge, color: Color.lerp(Colors.red, Colors.green, pet.happinessPercentatge)),
             Text('Exp: ${pet.experience}'),
           ],
         ),
