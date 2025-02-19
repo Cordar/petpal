@@ -1,0 +1,1 @@
+C:\Users\Enric\Projects\AppDev\Flutter\projecte_final\mybestfriend\build\app\intermediates\cxx\RelWithDebInfo\3m1a4j28\obj\arm64-v8a

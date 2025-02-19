@@ -9,10 +9,10 @@ class AddPetScreen extends StatefulWidget {
   const AddPetScreen({super.key});
 
   @override
-  _AddPetScreenState createState() => _AddPetScreenState();
+  AddPetScreenState createState() => AddPetScreenState();
 }
 
-class _AddPetScreenState extends State<AddPetScreen> {
+class AddPetScreenState extends State<AddPetScreen> {
   final _nameController = TextEditingController();
   final _birthdayController = TextEditingController();
   File? _selectedImage;
@@ -37,7 +37,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
 
@@ -72,7 +72,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
       final imageUrl = await ref.getDownloadURL();
       return imageUrl;
     } catch (e) {
-      print('Error uploading image: $e');
       return null;
     }
   }
@@ -80,9 +79,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
   Future<void> _savePet() async {
     final name = _nameController.text;
 
-    if (name.isEmpty ||
-        _selectedBirthday == null ||
-        _selectedImage == null) {
+    if (name.isEmpty || _selectedBirthday == null || _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, rellena todos los campos.')),
       );

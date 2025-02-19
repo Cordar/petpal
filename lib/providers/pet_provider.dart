@@ -19,52 +19,72 @@ class PetProvider extends ChangeNotifier {
     });
   }
 
+  loadPet(String name) {
+    return pets.firstWhere((element) => element.name == name);
+  }
+
   addPet(String name, DateTime birthday, String imageUrl,
       List<TimeOfDay> feedingTimes, List<TimeOfDay> walkingTimes) async {
+    feedingTimes.sort(_compareTimeOfDay);
+    walkingTimes.sort(_compareTimeOfDay);
     var pet = Pet(
       name: name,
       birthday: birthday,
       imageUrl: imageUrl,
       experience: 0.0,
-      happiness: 100.0,
-      hunger: 0.0,
       lastWalked: DateTime.now(),
       lastFed: DateTime.now(),
-      feedingTimes: feedingTimes, // Default feeding times
-      walkingTimes: walkingTimes, // Default walking times
+      feedingTimes: feedingTimes,
+      walkingTimes: walkingTimes,
     );
 
     await db.collection('pets').add(pet.toFirestore());
     notifyListeners();
   }
 
-  void startWalk(Pet pet) {
+  void walk(Pet pet) {
+    if (!pet.canWalk) return;
     pet.lastWalked = DateTime.now();
-    pet.happiness = (pet.happiness + 10).clamp(0, 100);
     pet.experience += 10;
 
     db.collection('pets').doc(pet.id).update({
       'lastWalked': pet.lastWalked,
-      'happiness': pet.happiness,
       'experience': pet.experience,
     });
 
     notifyListeners();
   }
 
-  void giveFood(Pet pet) {
+  void feed(Pet pet) {
+    if (!pet.canEat) return;
     pet.lastFed = DateTime.now();
-    pet.hunger = (pet.hunger + 20).clamp(0, 100);
-    pet.happiness = (pet.happiness + 5).clamp(0, 100);
-    pet.experience += 1;
+    pet.experience += 5;
 
     db.collection('pets').doc(pet.id).update({
       'lastFed': pet.lastFed,
-      'hunger': pet.hunger,
-      'happiness': pet.happiness,
       'experience': pet.experience,
     });
 
     notifyListeners();
+  }
+
+  void play(Pet pet) {
+    if (!pet.canPlay) return;
+    pet.lastPlayed = DateTime.now();
+    pet.experience += 20;
+
+    db.collection('pets').doc(pet.id).update({
+      'lastPlayed': pet.lastPlayed,
+      'experience': pet.experience,
+    });
+
+    notifyListeners();
+  }
+
+  int _compareTimeOfDay(TimeOfDay a, TimeOfDay b) {
+    if (a.hour == b.hour) {
+      return a.minute.compareTo(b.minute);
+    }
+    return a.hour.compareTo(b.hour);
   }
 }

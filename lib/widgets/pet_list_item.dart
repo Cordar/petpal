@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mybestfriend/models/pet.dart';
 import 'package:mybestfriend/providers/pet_provider.dart';
+import 'package:mybestfriend/screens/pet_details_screen.dart';
 
 class PetListItem extends StatelessWidget {
   final Pet pet;
@@ -14,46 +15,42 @@ class PetListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: pet.imageUrl.isNotEmpty
-            ? CircleAvatar(
-                backgroundImage: NetworkImage(pet.imageUrl),
-              )
-            : CircleAvatar(
-                child: Text(pet.name[0]),
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (ctx) => PetDetailsScreen(pet: pet),
+          ),
+        );
+      },
+      child: Card(
+        color: pet.canEat || pet.canPlay || pet.canWalk
+            ? Colors.red
+            : Colors.green,
+        elevation: 3,
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: ListTile(
+          leading: pet.imageUrl.isNotEmpty
+              ? CircleAvatar(
+                  backgroundImage: NetworkImage(pet.imageUrl),
+                )
+              : CircleAvatar(
+                  child: Text(pet.name[0]),
+                ),
+          title: Text(
+            "${pet.name}, ${pet.age}",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LinearProgressIndicator(
+                value: pet.currentLevelExperience / 100.0,
+                color: Colors.purple,
               ),
-        title: Text(
-          pet.name,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LinearProgressIndicator(value: pet.happinessPercentatge, color: Color.lerp(Colors.red, Colors.green, pet.happinessPercentatge)),
-            Text('Exp: ${pet.experience}'),
-          ],
-        ),
-        trailing: Wrap(
-          spacing: 8,
-          children: [
-            IconButton(
-              icon: Icon(Icons.directions_walk),
-              color: Colors.blue,
-              onPressed: () {
-                petProvider.startWalk(pet);
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.pets),
-              color: Colors.green,
-              onPressed: () {
-                petProvider.giveFood(pet);
-              },
-            ),
-          ],
+              Text('Level: ${pet.currentLevel}'),
+            ],
+          ),
         ),
       ),
     );
