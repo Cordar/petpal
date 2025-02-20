@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mybestfriend/extensions/string_extension.dart';
 import 'package:mybestfriend/models/pet.dart';
 import 'package:mybestfriend/services/auth_service.dart';
+import 'package:mybestfriend/services/notification_service.dart';
 
 class PetProvider extends ChangeNotifier {
   final db = FirebaseFirestore.instance;
@@ -49,6 +50,44 @@ class PetProvider extends ChangeNotifier {
     return null; // Return null if the pet is not found
   }
 
+  void _schedulePetReminders() {
+    for (var pet in _pets) {
+      if (pet.feedingTimes.isNotEmpty) {
+        for (var time in pet.feedingTimes) {
+          DateTime now = DateTime.now();
+          DateTime scheduleTime = DateTime(now.year, now.month, now.day,
+              time.hour, time.minute); // Convert TimeOfDay to DateTime
+
+          if (scheduleTime.isAfter(now)) {
+            NotificationService.scheduleNotification(
+              id: pet.id.hashCode + time.hashCode,
+              title: "Time to feed ${pet.name}!",
+              body: "It's feeding time for ${pet.name}.",
+              scheduledTime: scheduleTime,
+            );
+          }
+        }
+      }
+
+      if (pet.walkingTimes.isNotEmpty) {
+        for (var time in pet.walkingTimes) {
+          DateTime now = DateTime.now();
+          DateTime scheduleTime = DateTime(now.year, now.month, now.day,
+              time.hour, time.minute); // Convert TimeOfDay to DateTime
+
+          if (scheduleTime.isAfter(now)) {
+            NotificationService.scheduleNotification(
+              id: pet.id.hashCode + time.hashCode + 1,
+              title: "Time to walk ${pet.name}!",
+              body: "Take ${pet.name} for a walk.",
+              scheduledTime: scheduleTime,
+            );
+          }
+        }
+      }
+    }
+  }
+
   addPet(Pet pet) async {
     pet.feedingTimes.sort(_compareTimeOfDay);
     pet.walkingTimes.sort(_compareTimeOfDay);
@@ -59,6 +98,7 @@ class PetProvider extends ChangeNotifier {
 
     await db.collection('pets').add(pet.toFirestore());
     notifyListeners();
+    _schedulePetReminders();
   }
 
   updatePet(Pet pet) async {
@@ -66,6 +106,7 @@ class PetProvider extends ChangeNotifier {
     pet.walkingTimes.sort(_compareTimeOfDay);
     await db.collection('pets').doc(pet.id).update(pet.toFirestore());
     notifyListeners();
+    _schedulePetReminders();
   }
 
   void walk(Pet pet) {
