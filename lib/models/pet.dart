@@ -52,7 +52,7 @@ class Pet {
   get eats => feedingTimes.isNotEmpty;
   get happiness => _calculateHappinessBasedOnPlay();
   get pipi => _calculatePipiNeedBasedOnWalkingTimes();
-  get hunger => _calculateHungerBasedOnFeedingTimes();
+  get hunger => _calculateHungerBasedOnLastFed();
   get currentLevel => (experience / 50).toInt();
   get currentLevelExperience => ((experience % 50) / 50) * 100;
   get canWalk => _isActionAvailable(lastWalked, walkingTimes);
@@ -69,22 +69,44 @@ class Pet {
     experience = experience + value;
   }
 
-  bool _isActionAvailable(DateTime? lastAction, List<TimeOfDay> times) {
-    if (lastAction == null || times.isEmpty) return false;
+  bool _isActionAvailable(DateTime lastAction, List<TimeOfDay> times) {
+    int index = _getCurrentTimeIndex(lastAction, times);
+    if (index == -1) return false;
 
+    DateTime now = DateTime.now();
+    DateTime criticalDateTime = _getDateTimeFromTimeOfDay(times[index], now);
+
+    if (lastAction.isBefore(criticalDateTime) &&
+        now.isAfter(criticalDateTime)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  int _getCurrentTimeIndex(DateTime lastAction, List<TimeOfDay> times) {
     // Convert all timeofday to datetime
     DateTime now = DateTime.now();
     var todayTimes = [];
     for (final time in times) {
-      todayTimes
-          .add(DateTime(now.year, now.month, now.day, time.hour, time.minute));
+      todayTimes.add(_getDateTimeFromTimeOfDay(time, now));
     }
 
     // Compares if last action is done between times or before that
+    var index = 0;
     for (final todayTime in todayTimes) {
-      if (lastAction.isBefore(todayTime) && now.isAfter(todayTime)) return true;
+      if (lastAction.isBefore(todayTime) && now.isAfter(todayTime)) {
+        return index;
+      }
+      index++;
     }
-    return false;
+
+    return -1;
+  }
+
+  DateTime _getDateTimeFromTimeOfDay(TimeOfDay time, DateTime dateTime) {
+    return DateTime(
+        dateTime.year, dateTime.month, dateTime.day, time.hour, time.minute);
   }
 
   bool _isBefore(time1, time2) {
@@ -105,21 +127,12 @@ class Pet {
   }
 
   // Calculate hunger based on the feedingTimes
-  double _calculateHungerBasedOnFeedingTimes() {
+  double _calculateHungerBasedOnLastFed() {
     if (canEat) return 100.0;
+    if (feedingTimes.isEmpty) return 0.0;
 
     final currentTime = DateTime.now();
     final nextFeedingTime = _getNextScheduledTime(feedingTimes, currentTime);
-    final previousFeedingTime =
-        _getPreviousScheduledTime(feedingTimes, currentTime);
-
-    if (_isBefore(lastFed, previousFeedingTime)) {
-      return 100.0;
-    }
-
-    if (nextFeedingTime == null) {
-      return 0.0; // No upcoming feeding times, no hunger for now
-    }
 
     final timeSinceLastFed = currentTime.difference(lastFed).inMinutes;
     final timeUntilNextFeeding =
@@ -145,16 +158,6 @@ class Pet {
 
     final currentTime = DateTime.now();
     final nextWalkingTime = _getNextScheduledTime(walkingTimes, currentTime);
-    final previousWalkingTime =
-        _getPreviousScheduledTime(walkingTimes, currentTime);
-
-    if (_isBefore(lastWalked, previousWalkingTime)) {
-      return 100.0;
-    }
-
-    if (nextWalkingTime == null) {
-      return 0.0; // No upcoming walking times, no pipi need for now
-    }
 
     final timeSinceLastWalked = currentTime.difference(lastWalked).inMinutes;
     final timeUntilNextWalk = nextWalkingTime.difference(currentTime).inMinutes;
@@ -174,10 +177,8 @@ class Pet {
   }
 
   // Helper method to get the next scheduled feeding or walking time
-  DateTime? _getNextScheduledTime(
+  DateTime _getNextScheduledTime(
       List<TimeOfDay> times, DateTime currentDateTime) {
-    if (times.isEmpty) return null;
-
     for (var time in times) {
       final scheduledTime = DateTime(currentDateTime.year,
           currentDateTime.month, currentDateTime.day, time.hour, time.minute);
@@ -191,19 +192,19 @@ class Pet {
     final nextDay = currentDateTime.add(Duration(days: 1));
     final firstTimeOfNextDay = times.first;
     return DateTime(nextDay.year, nextDay.month, nextDay.day,
-        firstTimeOfNextDay.hour, firstTimeOfNextDay.minute);
+            firstTimeOfNextDay.hour, firstTimeOfNextDay.minute)
+        .add(const Duration(days: 1));
   }
 
-  DateTime? _getPreviousScheduledTime(
+  DateTime _getPreviousScheduledTime(
       List<TimeOfDay> times, DateTime currentDateTime) {
-    if (times.isEmpty) return null;
-
     DateTime previousScheduledTime = DateTime(
-        currentDateTime.year,
-        currentDateTime.month,
-        currentDateTime.day,
-        times[times.length - 1].hour,
-        times[times.length - 1].minute);
+            currentDateTime.year,
+            currentDateTime.month,
+            currentDateTime.day,
+            times[times.length - 1].hour,
+            times[times.length - 1].minute)
+        .subtract(const Duration(days: 1));
     for (var time in times) {
       final scheduledTime = DateTime(currentDateTime.year,
           currentDateTime.month, currentDateTime.day, time.hour, time.minute);
