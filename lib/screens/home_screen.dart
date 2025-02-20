@@ -20,10 +20,10 @@ class HomeScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Mis Mascotas'),
+            title: Text('My pets'),
           ),
           body: petProvider.pets.isEmpty
-              ? Center(child: Text('No tienes mascotas aún.'))
+              ? Center(child: Text('Add your first pet by using the + button.'))
               : ListView.builder(
                   itemCount: petProvider.pets.length,
                   itemBuilder: (ctx, index) {

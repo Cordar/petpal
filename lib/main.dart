@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mybestfriend/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import './providers/pet_provider.dart';
-import './screens/home_screen.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Pet Pal',
         theme: ThemeData(),
-        home: HomeScreen(),
+        home: LoginScreen(),
       ),
     );
   }

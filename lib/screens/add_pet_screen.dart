@@ -96,19 +96,21 @@ class AddPetScreenState extends State<AddPetScreen> {
       _isUploading = false;
     });
 
-    if (imageUrl != null) {
-      Provider.of<PetProvider>(context, listen: false).addPet(
-        name,
-        _selectedBirthday!,
-        imageUrl,
-        _feedingTimes,
-        _walkingTimes,
-      );
-      Navigator.of(context).pop();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al subir la imagen.')),
-      );
+    if (mounted) {
+      if (imageUrl != null) {
+        Provider.of<PetProvider>(context, listen: false).addPet(
+          name,
+          _selectedBirthday!,
+          imageUrl,
+          _feedingTimes,
+          _walkingTimes,
+        );
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al subir la imagen.')),
+        );
+      }
     }
   }
 

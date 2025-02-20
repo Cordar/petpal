@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mybestfriend/models/pet.dart';
+import 'package:mybestfriend/services/auth_service.dart';
 
 class PetProvider extends ChangeNotifier {
   final db = FirebaseFirestore.instance;
@@ -12,15 +13,29 @@ class PetProvider extends ChangeNotifier {
   }
 
   loadPets() {
-    final docRef = db.collection('pets');
+    final userId = AuthService().getUserId();
+    if (userId == null) return [];
+    final docRef = db.collection('pets').where('userId', isEqualTo: userId);
     docRef.orderBy('name').snapshots().listen((event) {
       pets = event.docs.map((e) => Pet.fromFirestore(e, null)).toList();
       notifyListeners();
     });
   }
 
-  loadPet(String name) {
-    return pets.firstWhere((element) => element.name == name);
+  Future<Pet?> loadPet(String name) async {
+    final userId = AuthService().getUserId();
+    if (userId == null) return null;
+
+    final querySnapshot = await db
+        .collection('pets')
+        .where('userId', isEqualTo: userId)
+        .where('name', isEqualTo: name)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      return Pet.fromFirestore(querySnapshot.docs.first, null);
+    }
+    return null; // Return null if the pet is not found
   }
 
   addPet(String name, DateTime birthday, String imageUrl,
@@ -36,6 +51,7 @@ class PetProvider extends ChangeNotifier {
       lastFed: DateTime.now(),
       feedingTimes: feedingTimes,
       walkingTimes: walkingTimes,
+      userId: AuthService().getUserId() ?? "no user",
     );
 
     await db.collection('pets').add(pet.toFirestore());

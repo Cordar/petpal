@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 
 class Pet {
   String? id;
+  final String userId;
   final String name;
   final DateTime birthday;
   final String imageUrl;
@@ -17,6 +18,7 @@ class Pet {
 
   Pet({
     this.id,
+    this.userId = "",
     required this.name,
     required this.birthday,
     required this.imageUrl,
@@ -262,6 +264,7 @@ class Pet {
     }
     return Pet(
       id: snapshot.id,
+      userId: data['userId'] ?? "",
       name: data['name'] ?? "",
       birthday: (data['birthday'] as Timestamp?)?.toDate() ?? DateTime.now(),
       imageUrl: data['imageUrl'] ?? "",
@@ -284,6 +287,7 @@ class Pet {
 
   Map<String, dynamic> toFirestore() {
     return {
+      'userId': userId,
       'name': name,
       'birthday': birthday,
       'imageUrl': imageUrl,
