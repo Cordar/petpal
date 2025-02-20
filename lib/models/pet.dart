@@ -1,11 +1,12 @@
 import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mybestfriend/services/auth_service.dart';
 
 class Pet {
   String? id;
   String userId;
-  final String name;
+  String name;
   final DateTime birthday;
   final String imageUrl;
   double experience;
@@ -17,8 +18,8 @@ class Pet {
 
   Pet({
     this.id,
-    this.userId = "",
-    required this.name,
+    String? userId,
+    String? name,
     required this.birthday,
     required this.imageUrl,
     this.experience = 0.0,
@@ -27,7 +28,9 @@ class Pet {
     DateTime? lastPlayed,
     this.feedingTimes = const [],
     this.walkingTimes = const [],
-  })  : lastPlayed = lastPlayed ?? DateTime.now().subtract(Duration(days: 1)),
+  })  : name = name ?? "Name",
+        userId = AuthService().getUserId() ?? "",
+        lastPlayed = lastPlayed ?? DateTime.now().subtract(Duration(days: 1)),
         lastWalked = lastWalked ?? DateTime.now(),
         lastFed = lastFed ?? DateTime.now();
 
@@ -44,6 +47,7 @@ class Pet {
     return age;
   }
 
+  get needsHelp => canEat || canPlay || canWalk;
   get walks => walkingTimes.isNotEmpty;
   get eats => feedingTimes.isNotEmpty;
   get happiness => _calculateHappinessBasedOnPlay();

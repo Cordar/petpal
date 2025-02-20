@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:mybestfriend/services/time_service.dart';
 import '../models/pet.dart';
 
 class PetForm extends StatefulWidget {
@@ -117,16 +118,22 @@ class PetFormState extends State<PetForm> {
 
     if (imageUrl != null) {
       final updatedPet = Pet(
-        id: widget.pet?.id ?? '',
-        name: name,
-        birthday: _selectedBirthday!,
-        imageUrl: imageUrl,
-        feedingTimes: _feedingTimes,
-        walkingTimes: _walkingTimes,
-      );
+          id: widget.pet?.id ?? '',
+          name: name,
+          birthday: _selectedBirthday!,
+          imageUrl: imageUrl,
+          feedingTimes: _feedingTimes,
+          walkingTimes: _walkingTimes,
+          experience: widget.pet?.experience ?? 0,
+          lastFed: widget.pet?.lastFed ??
+              DateTime.now().subtract(const Duration(days: 1)),
+          lastWalked: widget.pet?.lastWalked ??
+              DateTime.now().subtract(const Duration(days: 1)),
+          lastPlayed: widget.pet?.lastPlayed ??
+              DateTime.now().subtract(const Duration(days: 1)));
 
       widget.onSave(updatedPet);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop(updatedPet);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -185,7 +192,7 @@ class PetFormState extends State<PetForm> {
             int index = entry.key;
             TimeOfDay time = entry.value;
             return ListTile(
-              title: Text(time.format(context)),
+              title: Text(TimeService.formatTime(time)),
               trailing: IconButton(
                 icon: const Icon(Icons.remove_circle, color: Colors.red),
                 onPressed: () => _removeTime(_feedingTimes, index),
@@ -209,7 +216,7 @@ class PetFormState extends State<PetForm> {
             int index = entry.key;
             TimeOfDay time = entry.value;
             return ListTile(
-              title: Text(time.format(context)),
+              title: Text(TimeService.formatTime(time)),
               trailing: IconButton(
                 icon: const Icon(Icons.remove_circle, color: Colors.red),
                 onPressed: () => _removeTime(_walkingTimes, index),

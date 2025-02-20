@@ -24,9 +24,7 @@ class PetListItem extends StatelessWidget {
         );
       },
       child: Card(
-        color: pet.canEat || pet.canPlay || pet.canWalk
-            ? Colors.red
-            : Colors.green,
+        color: pet.needsHelp ? Colors.red[100] : Colors.lightBlue[100],
         elevation: 3,
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: ListTile(

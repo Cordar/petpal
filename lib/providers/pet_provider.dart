@@ -1,12 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mybestfriend/extensions/string_extension.dart';
 import 'package:mybestfriend/models/pet.dart';
 import 'package:mybestfriend/services/auth_service.dart';
 
 class PetProvider extends ChangeNotifier {
   final db = FirebaseFirestore.instance;
 
-  List<Pet> pets = [];
+  List<Pet> _pets = [];
+
+  List<Pet> get pets => _pets;
 
   PetProvider() {
     loadPets();
@@ -17,7 +20,15 @@ class PetProvider extends ChangeNotifier {
     if (userId == null) return [];
     final docRef = db.collection('pets').where('userId', isEqualTo: userId);
     docRef.orderBy('name').snapshots().listen((event) {
-      pets = event.docs.map((e) => Pet.fromFirestore(e, null)).toList();
+      _pets = event.docs.map((e) => Pet.fromFirestore(e, null)).toList();
+      _pets.sort((a, b) {
+        // Sort by 'needsHelp' first
+        if (a.needsHelp != b.needsHelp) {
+          return a.needsHelp ? -1 : 1; // Pets that need help come first
+        }
+        // If 'needsHelp' is the same, sort by 'name'
+        return a.name.compareTo(b.name);
+      });
       notifyListeners();
     });
   }
@@ -44,7 +55,7 @@ class PetProvider extends ChangeNotifier {
     pet.lastWalked = DateTime.now();
     pet.lastFed = DateTime.now();
     pet.experience = 0.0;
-    pet.userId = AuthService().getUserId() ?? "no user";
+    pet.name = pet.name.capitalize();
 
     await db.collection('pets').add(pet.toFirestore());
     notifyListeners();
@@ -53,12 +64,7 @@ class PetProvider extends ChangeNotifier {
   updatePet(Pet pet) async {
     pet.feedingTimes.sort(_compareTimeOfDay);
     pet.walkingTimes.sort(_compareTimeOfDay);
-    await db.collection('pets').doc(pet.id).update({
-      'name': pet.name,
-      'birthday': pet.birthday,
-      'feedingTimes': pet.feedingTimes,
-      'walkingTimes': pet.walkingTimes,
-    });
+    await db.collection('pets').doc(pet.id).update(pet.toFirestore());
     notifyListeners();
   }
 

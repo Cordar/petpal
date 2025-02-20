@@ -45,6 +45,23 @@ class PetDetailsScreenState extends State<PetDetailsScreen> {
               "${pet.name}, ${pet.age}",
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                // Navigate to EditPetScreen and wait for the updated pet
+                final updatedPet = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditPetScreen(pet: pet),
+                  ),
+                );
+                if (updatedPet != null) {
+                  setState(() {
+                    pet = updatedPet;
+                  });
+                }
+              },
+            ),
             const SizedBox(height: 20),
             StatBar(
                 label: "Experience (${pet.currentLevel})",
@@ -52,7 +69,7 @@ class PetDetailsScreenState extends State<PetDetailsScreen> {
                 colorMax: Colors.purple,
                 value: pet.experience,
                 maxValue: 50.0),
-            if (pet.canEat)
+            if (pet.eats)
               Column(
                 children: [
                   const SizedBox(height: 20),
@@ -93,7 +110,7 @@ class PetDetailsScreenState extends State<PetDetailsScreen> {
                   ),
                 ],
               ),
-            if (pet.canWalk)
+            if (pet.walks)
               Column(
                 children: [
                   const SizedBox(height: 20),
