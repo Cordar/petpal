@@ -4,6 +4,7 @@ import 'package:mybestfriend/models/pet.dart';
 import 'package:mybestfriend/providers/pet_provider.dart';
 import 'package:mybestfriend/widgets/action_button.dart';
 import 'package:mybestfriend/widgets/stat_bar.dart';
+import 'package:mybestfriend/screens/edit_pet_screen.dart';
 import 'package:provider/provider.dart';
 
 class PetDetailsScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class PetDetailsScreenState extends State<PetDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    pet = widget.pet; // Initialize pet from widget's prop
+    pet = widget.pet;
   }
 
   @override

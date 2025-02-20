@@ -38,23 +38,27 @@ class PetProvider extends ChangeNotifier {
     return null; // Return null if the pet is not found
   }
 
-  addPet(String name, DateTime birthday, String imageUrl,
-      List<TimeOfDay> feedingTimes, List<TimeOfDay> walkingTimes) async {
-    feedingTimes.sort(_compareTimeOfDay);
-    walkingTimes.sort(_compareTimeOfDay);
-    var pet = Pet(
-      name: name,
-      birthday: birthday,
-      imageUrl: imageUrl,
-      experience: 0.0,
-      lastWalked: DateTime.now(),
-      lastFed: DateTime.now(),
-      feedingTimes: feedingTimes,
-      walkingTimes: walkingTimes,
-      userId: AuthService().getUserId() ?? "no user",
-    );
+  addPet(Pet pet) async {
+    pet.feedingTimes.sort(_compareTimeOfDay);
+    pet.walkingTimes.sort(_compareTimeOfDay);
+    pet.lastWalked = DateTime.now();
+    pet.lastFed = DateTime.now();
+    pet.experience = 0.0;
+    pet.userId = AuthService().getUserId() ?? "no user";
 
     await db.collection('pets').add(pet.toFirestore());
+    notifyListeners();
+  }
+
+  updatePet(Pet pet) async {
+    pet.feedingTimes.sort(_compareTimeOfDay);
+    pet.walkingTimes.sort(_compareTimeOfDay);
+    await db.collection('pets').doc(pet.id).update({
+      'name': pet.name,
+      'birthday': pet.birthday,
+      'feedingTimes': pet.feedingTimes,
+      'walkingTimes': pet.walkingTimes,
+    });
     notifyListeners();
   }
 

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class Pet {
   String? id;
-  final String userId;
+  String userId;
   final String name;
   final DateTime birthday;
   final String imageUrl;
@@ -44,6 +44,8 @@ class Pet {
     return age;
   }
 
+  get walks => walkingTimes.isNotEmpty;
+  get eats => feedingTimes.isNotEmpty;
   get happiness => _calculateHappinessBasedOnPlay();
   get pipi => _calculatePipiNeedBasedOnWalkingTimes();
   get hunger => _calculateHungerBasedOnFeedingTimes();
@@ -66,46 +68,19 @@ class Pet {
   bool _isActionAvailable(DateTime? lastAction, List<TimeOfDay> times) {
     if (lastAction == null || times.isEmpty) return false;
 
-    final currentDateTime = DateTime.now();
-    // Checks if last action was performed before yesterday
-    if (lastAction.day + 1 < currentDateTime.day) {
-      return true;
+    // Convert all timeofday to datetime
+    DateTime now = DateTime.now();
+    var todayTimes = [];
+    for (final time in times) {
+      todayTimes
+          .add(DateTime(now.year, now.month, now.day, time.hour, time.minute));
     }
 
-    final firstTime = times[0];
-    final lastTime = times[times.length - 1];
-    // If it was yesterday check
-    if (lastAction.day == currentDateTime.day - 1) {
-      if (_isBefore(lastAction, lastTime)) {
-        return true;
-      }
-      if (_isAfter(currentDateTime, firstTime)) {
-        return true;
-      }
-      return false;
+    // Compares if last action is done between times or before that
+    for (final todayTime in todayTimes) {
+      if (lastAction.isBefore(todayTime) && now.isAfter(todayTime)) return true;
     }
-
-    TimeOfDay previousTime = firstTime;
-    final currentTime = TimeOfDay.now();
-    // Find previous and next scheduled times
-    for (var time in times) {
-      if (_isAfter(time, currentTime)) {
-        break;
-      }
-      previousTime = time;
-    }
-
-    // If last action was before previous time
-    if (_isBefore(lastAction, previousTime)) {
-      return true;
-    }
-
     return false;
-  }
-
-  bool _isAfter(time1, time2) {
-    return time1.hour > time2.hour ||
-        (time1.hour == time2.hour && time1.minute > time2.minute);
   }
 
   bool _isBefore(time1, time2) {

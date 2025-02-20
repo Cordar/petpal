@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mybestfriend/screens/home_screen.dart';
 import 'package:mybestfriend/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import './providers/pet_provider.dart';
@@ -23,8 +25,29 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Pet Pal',
         theme: ThemeData(),
-        home: LoginScreen(),
+        home: AuthChecker(),
       ),
+    );
+  }
+}
+
+class AuthChecker extends StatelessWidget {
+  const AuthChecker({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance
+          .authStateChanges(), // Listen for auth state changes
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasData && snapshot.data != null) {
+          return HomeScreen(); // User is logged in, go to Home
+        }
+        return LoginScreen(); // User is not logged in, show Login screen
+      },
     );
   }
 }
