@@ -67,7 +67,7 @@ class PetDetailsScreenState extends State<PetDetailsScreen> {
                 label: "Experience (${pet.currentLevel})",
                 colorMin: Colors.purple,
                 colorMax: Colors.purple,
-                value: pet.experience,
+                value: pet.currentLevelExperience,
                 maxValue: 50.0),
             if (pet.eats)
               Column(
