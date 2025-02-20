@@ -52,78 +52,88 @@ class PetDetailsScreenState extends State<PetDetailsScreen> {
                 colorMax: Colors.purple,
                 value: pet.experience,
                 maxValue: 50.0),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: StatBar(
-                      label: "Hunger",
-                      previousTime: pet.lastFed,
-                      nextTime: pet.nextFeedTime,
-                      colorMin: Colors.green,
-                      colorMax: Colors.red,
-                      value: pet.hunger,
-                      maxValue: 100.0),
-                ),
-                SizedBox(width: 20), // Add spacing between the buttons
-                Expanded(
-                  child: ActionButton(
-                    label: pet.previousFeedTime != null
-                        ? pet.canEat
-                            ? DateFormat('HH:mm')
-                                .format(pet.previousFeedTime!)
-                                .toString()
-                            : DateFormat('HH:mm')
-                                .format(pet.nextFeedTime!)
-                                .toString()
-                        : "Feed",
-                    color: Colors.orange,
-                    icon: Icons.restaurant,
-                    onPressed: () {
-                      petProvider.feed(pet);
-                    },
-                    isDisabled: !pet.canEat,
+            if (pet.canEat)
+              Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: StatBar(
+                            label: "Hunger",
+                            previousTime: pet.lastFed,
+                            nextTime: pet.nextFeedTime,
+                            colorMin: Colors.green,
+                            colorMax: Colors.red,
+                            value: pet.hunger,
+                            maxValue: 100.0),
+                      ),
+                      SizedBox(width: 20), // Add spacing between the buttons
+                      Expanded(
+                        child: ActionButton(
+                          label: pet.previousFeedTime != null
+                              ? pet.canEat
+                                  ? DateFormat('HH:mm')
+                                      .format(pet.previousFeedTime!)
+                                      .toString()
+                                  : DateFormat('HH:mm')
+                                      .format(pet.nextFeedTime!)
+                                      .toString()
+                              : "Feed",
+                          color: Colors.orange,
+                          icon: Icons.restaurant,
+                          onPressed: () {
+                            petProvider.feed(pet);
+                          },
+                          isDisabled: !pet.canEat,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: StatBar(
-                      label: "Pipi",
-                      previousTime: pet.lastWalked,
-                      nextTime: pet.nextWalkTime,
-                      colorMin: Colors.green,
-                      colorMax: Colors.red,
-                      value: pet.pipi,
-                      maxValue: 100.0),
-                ),
-                SizedBox(width: 20), // Add spacing between the buttons
-                Expanded(
-                  child: ActionButton(
-                    label: pet.previousWalkTime != null
-                        ? pet.canWalk
-                            ? DateFormat('HH:mm')
-                                .format(pet.previousWalkTime!)
-                                .toString()
-                            : DateFormat('HH:mm')
-                                .format(pet.nextWalkTime!)
-                                .toString()
-                        : "Walk",
-                    color: Colors.blue,
-                    icon: Icons.directions_walk,
-                    onPressed: () {
-                      petProvider.walk(pet);
-                    },
-                    isDisabled: !pet.canWalk,
+                ],
+              ),
+            if (pet.canWalk)
+              Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: StatBar(
+                            label: "Pipi",
+                            previousTime: pet.lastWalked,
+                            nextTime: pet.nextWalkTime,
+                            colorMin: Colors.green,
+                            colorMax: Colors.red,
+                            value: pet.pipi,
+                            maxValue: 100.0),
+                      ),
+                      SizedBox(width: 20), // Add spacing between the buttons
+                      Expanded(
+                        child: ActionButton(
+                          label: pet.previousWalkTime != null
+                              ? pet.canWalk
+                                  ? DateFormat('HH:mm')
+                                      .format(pet.previousWalkTime!)
+                                      .toString()
+                                  : DateFormat('HH:mm')
+                                      .format(pet.nextWalkTime!)
+                                      .toString()
+                              : "Walk",
+                          color: Colors.blue,
+                          icon: Icons.directions_walk,
+                          onPressed: () {
+                            petProvider.walk(pet);
+                          },
+                          isDisabled: !pet.canWalk,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             const SizedBox(height: 20),
             Row(
               children: [
